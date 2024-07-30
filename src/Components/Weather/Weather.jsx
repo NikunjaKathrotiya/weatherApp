@@ -3,10 +3,11 @@ import "../Weather/Weather.css";
 import { WiHumidity } from "react-icons/wi";
 import { IoSearch } from "react-icons/io5";
 import sunny from "../../assets/sunny2.webp";
+import moon from "../../assets/moon.jpg";
 import { LuWind } from "react-icons/lu";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Import the CSS for Toastify
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Weather() {
   const [city, setCity] = useState("");
@@ -17,7 +18,9 @@ export default function Weather() {
 
     axios
       .get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=fd69c683d920c977ab77d25393e24cd4`
+        `https://api.openweathermap.org/data/2.5/weather?q=Surat&units=metric&appid=fd69c683d920c977ab77d25393e24cd4
+
+`
       )
       .then((res) => {
         if (res.status === 200) {
@@ -25,32 +28,55 @@ export default function Weather() {
             temperature: Math.floor(res.data.main.temp),
             humidity: res.data.main.humidity,
             windspeed: res.data.wind.speed,
-            location:res.data.name,
-    
+            location: res.data.name,
           });
           console.log(res.data, "data print>>>>>>>>>");
         }
       })
       .catch((error) => {
-        if (error.response && error.response.status === 404) {
-          toast.success("City not found. Please enter a valid city", {
+        if (error.response) {
+          if (error.response.status === 404) {
+            toast.success("City not found. Please enter a valid city", {
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
+          } else {
+            toast.error(
+              `Error: ${error.response.status} - ${error.response.data.message}`,
+              {
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+              }
+            );
+            console.log("Error response data:", error.response.data);
+          }
+        } else if (error.request) {
+          toast.error("No response received from the server", {
             autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
           });
+          console.log("Error request:", error.request);
         } else {
-          toast.error("Something went wrong", {
+          toast.error("Error in setting up the request", {
             autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
             draggable: true,
           });
-          console.log("Something went wrong", error);
+          console.log("Error message:", error.message);
         }
       });
+    console.log("weatherData....", weatherData);
   };
 
   return (
@@ -65,7 +91,10 @@ export default function Weather() {
         <IoSearch className="search-icon" onClick={handleSearch} />
       </div>
 
-      <img src={sunny} alt="Sunny" />
+      <img
+        src={weatherData && weatherData.temperature < 20 ? moon : sunny}
+        alt={weatherData && weatherData.temperature < 20 ? "Moon" : "Sunny"}
+      />
 
       <div className="details">
         {weatherData ? (
@@ -101,7 +130,6 @@ export default function Weather() {
         </div>
       </div>
 
-      {/* Add ToastContainer here */}
       <ToastContainer />
     </div>
   );
