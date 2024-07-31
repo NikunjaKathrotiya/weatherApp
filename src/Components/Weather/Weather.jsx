@@ -3,40 +3,53 @@ import "../Weather/Weather.css";
 import { WiHumidity } from "react-icons/wi";
 import { IoSearch } from "react-icons/io5";
 import sunny from "../../assets/sunny2.webp";
-import moon from "../../assets/moon.jpg";
+import cloud from "../../assets/cloud.jpg";
 import { LuWind } from "react-icons/lu";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function Weather() {
+export default function Weather(props) {
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState(null);
+  const [mode, setMode] = useState("light");
 
-  const handleSearch = () => {
-    if (!city) return;
+  const handleSearch = (event) => {
+    event.preventDefault();
 
+    if (!city) {
+      toast.warning("Please enter a city name", {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+    console.log("print weatherData....", weatherData);
     axios
       .get(
-        `https://api.openweathermap.org/data/2.5/weather?q=Surat&units=metric&appid=fd69c683d920c977ab77d25393e24cd4
-
-`
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=fd69c683d920c977ab77d25393e24cd4`
       )
       .then((res) => {
         if (res.status === 200) {
+          const temperature = Math.floor(res.data.main.temp);
+          const newMode = temperature < 22 ? "dark" : "light";
           setWeatherData({
-            temperature: Math.floor(res.data.main.temp),
+            temperature,
             humidity: res.data.main.humidity,
             windspeed: res.data.wind.speed,
             location: res.data.name,
           });
-          console.log(res.data, "data print>>>>>>>>>");
+          setMode(newMode);
+          console.log(newMode);
         }
       })
       .catch((error) => {
         if (error.response) {
           if (error.response.status === 404) {
-            toast.success("City not found. Please enter a valid city", {
+            toast.error("City not found. Please enter a valid city", {
               autoClose: 3000,
               hideProgressBar: false,
               closeOnClick: true,
@@ -54,7 +67,6 @@ export default function Weather() {
                 draggable: true,
               }
             );
-            console.log("Error response data:", error.response.data);
           }
         } else if (error.request) {
           toast.error("No response received from the server", {
@@ -64,7 +76,6 @@ export default function Weather() {
             pauseOnHover: true,
             draggable: true,
           });
-          console.log("Error request:", error.request);
         } else {
           toast.error("Error in setting up the request", {
             autoClose: 3000,
@@ -73,39 +84,37 @@ export default function Weather() {
             pauseOnHover: true,
             draggable: true,
           });
-          console.log("Error message:", error.message);
         }
       });
-    console.log("weatherData....", weatherData);
   };
 
   return (
-    <div className="weather">
-      <div className="search-bar">
+    <div className={mode === "light" ? "weather" : "weather-dark"}>
+      <form className="search-bar" onSubmit={handleSearch}>
         <input
           type="text"
           placeholder="Search city..."
           value={city}
           onChange={(e) => setCity(e.target.value)}
         />
-        <IoSearch className="search-icon" onClick={handleSearch} />
-      </div>
-
+        <button type="submit" className="search-icon">
+          <IoSearch />
+        </button>
+      </form>
       <img
-        src={weatherData && weatherData.temperature < 20 ? moon : sunny}
-        alt={weatherData && weatherData.temperature < 20 ? "Moon" : "Sunny"}
+        className="son-moon-images"
+        src={weatherData && weatherData.temperature < 20 ? cloud : sunny}
+        alt={weatherData && weatherData.temperature < 20 ? "cloud" : "Sunny"}
       />
 
       <div className="details">
         {weatherData ? (
           <>
-            <p className="temperature">
-              {weatherData ? `${weatherData.temperature}°C` : "0.0 °C"}
-            </p>
+            <p className="temperature">{`${weatherData.temperature}°C`}</p>
             <p className="location">{weatherData.location}</p>
           </>
         ) : (
-          <></>
+          <p>No weather data available</p>
         )}
       </div>
 
