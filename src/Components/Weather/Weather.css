@@ -96,3 +96,27 @@
     width: 46px;
     margin-top: 10px;
   }
+  .weekly-forecast {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .daily-forecast {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .daily-forecast .date {
+    font-weight: bold;
+  }
+  
+  .daily-forecast .temperature,
+  .daily-forecast .humidity,
+  .daily-forecast .windspeed {
+    margin: 0;
+  }
+  

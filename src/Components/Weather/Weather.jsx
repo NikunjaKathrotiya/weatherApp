@@ -9,9 +9,10 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function Weather(props) {
+export default function Weather() {
   const [city, setCity] = useState("");
   const [weatherData, setWeatherData] = useState(null);
+  const [dailyWeatherData, setDailyWeatherData] = useState([]);
   const [mode, setMode] = useState("light");
 
   const handleSearch = (event) => {
@@ -27,28 +28,38 @@ export default function Weather(props) {
       });
       return;
     }
-    console.log("print weatherData....", weatherData);
+
     axios
       .get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=fd69c683d920c977ab77d25393e24cd4`
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=fd69c683d920c977ab77d25393e24cd4`
       )
       .then((res) => {
         if (res.status === 200) {
-          const temperature = Math.floor(res.data.main.temp);
+          const {lat,lon} = res.data.city.coord;
+          const dailyData = res.data.list
+            .filter((entry) => entry.dt_txt.includes("12:00:00")) 
+            .map((entry) => ({
+              temperature: Math.floor(entry.main.temp),
+              humidity: entry.main.humidity,
+              windspeed: entry.wind.speed,
+              date: new Date(entry.dt * 1000).toLocaleDateString(),
+            }));
+          const temperature = Math.floor(dailyData[0].temperature);
           const newMode = temperature < 22 ? "dark" : "light";
           setWeatherData({
             temperature,
-            humidity: res.data.main.humidity,
-            windspeed: res.data.wind.speed,
-            location: res.data.name,
+            humidity: dailyData[0].humidity,
+            windspeed: dailyData[0].windspeed,
+            location: city,
           });
+          setDailyWeatherData(dailyData);
           setMode(newMode);
-          console.log(newMode);
         }
       })
       .catch((error) => {
         if (error.response) {
           if (error.response.status === 404) {
+
             toast.error("City not found. Please enter a valid city", {
               autoClose: 3000,
               hideProgressBar: false,
@@ -65,7 +76,6 @@ export default function Weather(props) {
                 closeOnClick: true,
                 pauseOnHover: true,
                 draggable: true,
-                
               }
             );
           }
@@ -88,7 +98,7 @@ export default function Weather(props) {
         }
       });
   };
-console.log("hd");
+
   return (
     <div className={mode === "light" ? "weather" : "weather-dark"}>
       <form className="search-bar" onSubmit={handleSearch}>
@@ -127,6 +137,7 @@ console.log("hd");
             <span>Humidity</span>
           </div>
         </div>
+
         <div className="col">
           <LuWind className="data-img" />
           <div>
@@ -138,6 +149,21 @@ console.log("hd");
             <span>Wind Speed</span>
           </div>
         </div>
+      </div>
+
+      <div className="weekly-forecast">
+        {dailyWeatherData.length > 0 ? (
+          dailyWeatherData.map((day, index) => (
+            <div key={index} className="daily-forecast">
+              <p className="date">{day.date}</p>
+              <p className="temperature">{`${day.temperature}°C`}</p>
+              <p className="humidity">{`${day.humidity}%`}</p>
+              <p className="windspeed">{`${day.windspeed.toFixed(0)} km/h`}</p>
+            </div>
+          ))
+        ) : (
+          <p>No weekly data available</p>
+        )}
       </div>
 
       <ToastContainer />
