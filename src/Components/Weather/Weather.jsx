@@ -88,7 +88,7 @@ export default function Weather(props) {
         }
       });
   };
-
+console.log("hd");
   return (
     <div className={mode === "light" ? "weather" : "weather-dark"}>
       <form className="search-bar" onSubmit={handleSearch}>
