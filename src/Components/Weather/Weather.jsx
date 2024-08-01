@@ -65,6 +65,7 @@ export default function Weather(props) {
                 closeOnClick: true,
                 pauseOnHover: true,
                 draggable: true,
+                
               }
             );
           }
